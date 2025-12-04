@@ -1,6 +1,7 @@
 package game
 
 import agent.Agent
+import util.adjustElement
 
 object GameManager {
 
@@ -50,4 +51,32 @@ object GameManager {
         }
         return 0
     }
+
+    fun initializeGlobalState(drawSequence: List<Int>) =
+        drawSequence.fold(GlobalGameState(), ::drawCard)
+
+    private fun drawCard(
+        state: GlobalGameState, playerIdx: Int
+    ) =
+        GameManager.rollProbUniform(state.deck).let { drawnCard ->
+            assert(state.deck[drawnCard] > 0)
+            state.giveCardToPlayer(playerIdx, drawnCard)
+        }
+
+    private fun GlobalGameState.giveCardToPlayer(playerIdx: Int, drawnCard: Int) =
+        copy(
+            deck = deck.adjustElement(drawnCard, -1),
+            hands = hands.mapIndexed { idx, originalHand ->
+                if (idx == playerIdx) {
+                    originalHand.adjustElement(drawnCard, 1)
+                } else originalHand
+            }
+        )
+
+    fun applyAction(state: GlobalGameState, action: Action) =
+        with(state) {
+            val drawnCard = rollProbUniform(deck)
+            play(action, drawnCard)
+        }
+
 }
