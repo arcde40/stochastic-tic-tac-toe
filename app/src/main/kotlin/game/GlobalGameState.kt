@@ -37,8 +37,8 @@ data class GlobalGameState(
 
     private fun getHandOf(playerIndex: Int): List<Int> = hands[playerIndex]
 
-    private fun getDeckWithOpponentHand() =
-        deck.zip(getHandOf((currentPlayer + 1) % 2), Int::plus)
+    private fun getDeckWithOpponentHand(playerIndex: Int = currentPlayer) =
+        deck.zip(getHandOf((playerIndex + 1) % 2), Int::plus)
 
     fun toState(): GameState {
         return GameState(
@@ -48,13 +48,21 @@ data class GlobalGameState(
         )
     }
 
+    fun toState(playerIndex: Int): GameState {
+        return GameState(
+            deck = getDeckWithOpponentHand(playerIndex),
+            hand = getHandOf(playerIndex),
+            board = board.toSquareBoard(playerIndex)
+        )
+    }
+
     private fun getOpponentIndex() = (currentPlayer + 1) % 2
 
-    private fun List<Int>.toSquareBoard() =
+    private fun List<Int>.toSquareBoard(playerIndex: Int = currentPlayer) =
         map {
             when (it) {
                 EMPTY -> Square.EMPTY
-                currentPlayer -> Square.MINE
+                playerIndex -> Square.MINE
                 else -> Square.OPPONENT
             }
         }
