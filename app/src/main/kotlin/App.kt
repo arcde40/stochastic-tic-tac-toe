@@ -1,5 +1,5 @@
-import agent.expectimax.ExpectimaxAgent
 import agent.human.HumanAgent
+import agent.random.RandomAgent
 import game.GameManager
 
 fun main(args: Array<String>) {
@@ -31,6 +31,7 @@ fun main(args: Array<String>) {
 
     GameManager.startGame(
         HumanAgent(),
-        ExpectimaxAgent(name = "Expectimax", debug = true),
+        RandomAgent(name = "Dumb"),
+        //ExpectimaxAgent(name = "Expectimax", debug = true),
     )
 }

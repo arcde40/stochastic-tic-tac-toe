@@ -1,7 +1,6 @@
 package game
 
 import agent.Agent
-import util.adjustElement
 
 object GameManager {
 
@@ -32,29 +31,7 @@ object GameManager {
         }
 
     fun startGame(agent1: Agent, agent2: Agent) {
-        val deck = mutableListOf(0, 3, 3, 3, 1);
-
-        val agent1Hand = listOf(0, 0, 0, 0, 0)
-            .adjustElement(rollProbUniform(deck).also { deck[it]-- }, 1)
-            .adjustElement(rollProbUniform(deck).also { deck[it]-- }, 1)
-
-        val agent2Hand = listOf(0, 0, 0, 0, 0)
-            .adjustElement(rollProbUniform(deck).also { deck[it]-- }, 1)
-            .adjustElement(rollProbUniform(deck).also { deck[it]-- }, 1)
-
-        val agent1State = GameState(
-            board = (1..9).map { Square.EMPTY },
-            hand = agent1Hand,
-            deck = deck.toList(),
-        )
-
-        val agent2State = GameState(
-            board = (1..9).map { Square.EMPTY },
-            hand = agent2Hand,
-            deck = deck.toList(),
-        )
-
-        GameController(agent1, agent2).startGame(agent1State, agent2State)
+        GameController(agent1, agent2).startGame()
     }
 
     fun rollProbUniform(deck: List<Int>) = rollProb(deck) { sum -> if (sum > 0) (0..<sum).random() else 0 }
