@@ -11,13 +11,7 @@ data class GlobalGameState(
     val currentPlayer: Int = 0
 ) {
     val status: GameStatus
-        get() = if (toState().iterateAction()
-                .isEmpty()
-        ) {
-            GameStatus.LOSE
-        } else {
-            GameManager.hasWonByBoard(board.toSquareBoard())
-        }
+        get() = GameManager.hasWonByBoard(board.toSquareBoard())
 
     fun play(action: Action, drawnCard: Int): GlobalGameState {
         require(getHandOf(currentPlayer)[action.card] > 0) { "Player doesn't have the card!" }

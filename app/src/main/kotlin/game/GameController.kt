@@ -5,18 +5,22 @@ import agent.Agent
 class GameController(
     val agent1: Agent,
     val agent2: Agent,
+    val silent: Boolean = true
 ) {
-    fun startGame() {
+    fun startGame(): Int {
         val drawSequence = listOf(0, 1, 0, 1)
         val initialState = GameManager.initializeGlobalState(drawSequence)
 
         val finalState = gameLoop(initialState)
 
         if (finalState.status == GameStatus.WIN) {
-            println("${finalState.getCurrentAgent().name} Win!")
+            if (!silent) println("${finalState.getCurrentAgent().name} Win!")
+            return finalState.currentPlayer
         } else if (finalState.status == GameStatus.LOSE) {
-            println("${finalState.getOpponentAgent().name} Win!")
-        } else println("Draw!")
+            if (!silent) println("${finalState.getOpponentAgent().name} Win!")
+            return (finalState.currentPlayer + 1) % 2
+        } else if (!silent) println("Draw!")
+        return -1
     }
 
     private tailrec fun gameLoop(state: GlobalGameState): GlobalGameState {
@@ -24,11 +28,11 @@ class GameController(
 
         val action = state.getCurrentAgent().decideMove(state.toState())
         if (action == null) {
-            println("${state.getCurrentAgent().name} Resigned.")
+            if (!silent) println("${state.getCurrentAgent().name} Resigned.")
             return state
         }
 
-        println("${state.getCurrentAgent().name} -> $action")
+        if (!silent) println("${state.getCurrentAgent().name} -> $action")
 
         val newState = GameManager.applyAction(state, action)
         return gameLoop(newState)

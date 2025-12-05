@@ -9,22 +9,22 @@ private const val WIN_VALUE = 1.0
 private const val LOSE_VALUE = -1.0
 private const val DRAW_VALUE = 0.0
 
-sealed class Node(val state: GameState) {
-    abstract fun go(memo: MutableMap<GameState, Double>): Double
+sealed class Node(val state: GameState, val currentDepth: Int = 9) {
+    abstract fun go(memo: MutableMap<Pair<GameState, Int>, Double>): Double
 
-    class Max(state: GameState) : Node(state) {
-        override fun go(memo: MutableMap<GameState, Double>): Double {
+    class Max(state: GameState, currentDepth: Int) : Node(state, currentDepth) {
+        override fun go(memo: MutableMap<Pair<GameState, Int>, Double>): Double {
             getCachedOrTerminalScore(memo)?.let { return it }
             val score = state.iterateAction().maxOfOrNull { action ->
-                Chance(state.play(action, Square.MINE)).go(memo)
+                Chance(state.play(action, Square.MINE), currentDepth - 1).go(memo)
             } ?: LOSE_VALUE
-            memo[state] = score
+            memo[state to currentDepth] = score
             return score
         }
     }
 
-    class Min(state: GameState) : Node(state) {
-        override fun go(memo: MutableMap<GameState, Double>): Double {
+    class Min(state: GameState, currentDepth: Int) : Node(state, currentDepth) {
+        override fun go(memo: MutableMap<Pair<GameState, Int>, Double>): Double {
             getCachedOrTerminalScore(memo)?.let { return it }
             val deckCount = state.deck.sum()
 
@@ -40,7 +40,8 @@ sealed class Node(val state: GameState) {
                         newState
                             .play(action, Square.OPPONENT)
                             .draw(action.card)
-                            .copy(hand = state.hand)
+                            .copy(hand = state.hand),
+                        currentDepth - 1
                     ).go(memo)
                 } ?: WIN_VALUE
             }
@@ -73,7 +74,8 @@ sealed class Node(val state: GameState) {
                             opponentState
                                 .play(action, Square.OPPONENT)
                                 .draw(action.card)
-                                .copy(hand = state.hand)
+                                .copy(hand = state.hand),
+                            currentDepth - 1
                         ).go(
                             memo
                         )
@@ -83,13 +85,13 @@ sealed class Node(val state: GameState) {
                 }
             }
 
-            memo[state] = result
+            memo[state to currentDepth] = result
             return result
         }
     }
 
-    class Chance(state: GameState) : Node(state) {
-        override fun go(memo: MutableMap<GameState, Double>): Double {
+    class Chance(state: GameState, currentDepth: Int) : Node(state, currentDepth) {
+        override fun go(memo: MutableMap<Pair<GameState, Int>, Double>): Double {
             getCachedOrTerminalScore(memo)?.let { return it }
             val deckCount = state.deck.sum()
 
@@ -98,7 +100,7 @@ sealed class Node(val state: GameState) {
                 else {
                     val probability = cardCount.toDouble() / deckCount.toDouble()
                     val nextState = state.draw(cardType)
-                    probability * Min(nextState).go(memo)
+                    probability * Min(nextState, currentDepth - 1).go(memo)
                 }
             }.sum()
 
@@ -106,11 +108,12 @@ sealed class Node(val state: GameState) {
         }
     }
 
-    protected fun getCachedOrTerminalScore(memo: MutableMap<GameState, Double>): Double? {
+    protected fun getCachedOrTerminalScore(memo: MutableMap<Pair<GameState, Int>, Double>): Double? {
+        if (currentDepth == 0) return Heuristic.evaluate(state)
         DebugObject.visitedNode++
-        if (memo.containsKey(state)) {
+        if (memo.containsKey(state to currentDepth)) {
             DebugObject.cacheHits++
-            //return memo[state]
+            return memo[state to currentDepth]
         }
         if (state.isGameEnded()) {
             return getTerminalValue(state.status)

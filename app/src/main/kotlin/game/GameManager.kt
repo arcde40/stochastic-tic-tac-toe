@@ -31,8 +31,8 @@ object GameManager {
             ((v shl 1) or (if (entry == squareOption) 1 else 0))
         }
 
-    fun startGame(agent1: Agent, agent2: Agent) {
-        GameController(agent1, agent2).startGame()
+    fun startGame(agent1: Agent, agent2: Agent, silent: Boolean = true): Int {
+        return GameController(agent1, agent2, silent).startGame()
     }
 
     fun rollProbUniform(deck: List<Int>) = rollProb(deck) { sum -> if (sum > 0) (0..<sum).random() else 0 }

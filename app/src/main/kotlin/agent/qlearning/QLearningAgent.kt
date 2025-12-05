@@ -3,6 +3,7 @@ package agent.qlearning
 import agent.Agent
 import game.Action
 import game.GameState
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 
 class QLearningAgent(
@@ -13,7 +14,7 @@ class QLearningAgent(
 ) : Agent {
 
     // S -> (A, V)
-    val qTable = mutableMapOf<GameState, MutableMap<Action, Double>>()
+    val qTable = ConcurrentHashMap<GameState, ConcurrentHashMap<Action, Double>>()
 
     override fun decideMove(gameState: GameState): Action? {
         val actions = gameState.iterateAction()
@@ -25,14 +26,19 @@ class QLearningAgent(
 
         val policyActionMap = qTable[gameState] ?: return actions.random()
 
-        val maxQ = policyActionMap.values.maxOrNull() ?: 0.0
-        val bestActions = actions.filter { action -> (policyActionMap[action] ?: 0.0) >= maxQ }
 
-        return bestActions.random()
+        val currentScores = actions.associateWith { policyActionMap[it] ?: 0.0 }
+        val maxQ = currentScores.values.maxOrNull() ?: 0.0
+
+        // 최고 점수를 가진 행동들만 추림
+        val bestActions = currentScores.filter { it.value == maxQ }.keys
+
+        // [안전 장치] 혹시라도 비었으면(그럴 리 없지만) 전체 랜덤 반환
+        return bestActions.randomOrNull() ?: actions.random()
     }
 
     fun learn(lastState: GameState, action: Action, reward: Double, nextState: GameState, gameEnded: Boolean) {
-        val qValue = qTable.getOrPut(lastState) { mutableMapOf() }
+        val qValue = qTable.computeIfAbsent(lastState) { ConcurrentHashMap() }
         val currentQ = qValue[action] ?: 0.0
         val nextQ = if (gameEnded) {
             0.0

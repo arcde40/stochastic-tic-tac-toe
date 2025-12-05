@@ -4,12 +4,14 @@ import agent.Agent
 import game.Action
 import game.GameState
 import game.Square
+import java.util.concurrent.ConcurrentHashMap
 
 class ExpectimaxAgent(
     private val debug: Boolean,
-    override val name: String
+    override val name: String,
+    val maxDepth: Int = 9
 ) : Agent {
-    private val memo = mutableMapOf<GameState, Double>()
+    private val memo = ConcurrentHashMap<Pair<GameState, Int>, Double>()
 
     override fun decideMove(gameState: GameState): Action? {
         memo.clear()
@@ -25,7 +27,7 @@ class ExpectimaxAgent(
 
         val scores = actions.map { action ->
             val nextState = gameState.play(action, Square.MINE)
-            val score = Node.Chance(nextState).go(memo)
+            val score = Node.Chance(nextState, maxDepth).go(memo)
             action to score
         }
 

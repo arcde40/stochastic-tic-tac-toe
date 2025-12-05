@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.guava)
     testImplementation("io.kotest:kotest-framework-engine:6.0.7")
     testImplementation("io.kotest:kotest-assertions-core:6.0.7")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
