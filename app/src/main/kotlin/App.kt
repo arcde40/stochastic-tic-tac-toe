@@ -1,4 +1,7 @@
+import agent.expectimax.ExpectimaxAgent
 import agent.qlearning.Gym
+import agent.qlearning.QLearntAgent
+import game.GameManager
 
 fun main(args: Array<String>) {
 
@@ -27,10 +30,11 @@ fun main(args: Array<String>) {
     println("Visited Nodes: ${DebugObject.visitedNode}")
     println("Cache Hits: ${DebugObject.cacheHits} (${DebugObject.cacheHits.toDouble() / DebugObject.visitedNode})") */
 
-    /*GameManager.startGame(
-        HumanAgent(),
-        RandomAgent(name = "Dumb"),
+    GameManager.startGame(
+        QLearntAgent(name = "Q-Learning Agent 1"),
+        QLearntAgent(name = "Ex"),
         //ExpectimaxAgent(name = "Expectimax", debug = true),
-    )*/
-    Gym().learn()
+    )
+
+    //Gym().learn()
 }

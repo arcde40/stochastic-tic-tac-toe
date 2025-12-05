@@ -11,12 +11,22 @@ data class GlobalGameState(
     val currentPlayer: Int = 0
 ) {
     val status: GameStatus
-        get() = GameManager.hasWonByBoard(board.toSquareBoard())
+        get() = if (toState().iterateAction()
+                .isEmpty()
+        ) {
+            GameStatus.LOSE
+        } else {
+            GameManager.hasWonByBoard(board.toSquareBoard())
+        }
 
     fun play(action: Action, drawnCard: Int): GlobalGameState {
-        assert(getHandOf(currentPlayer)[action.card] > 0) { "Player doesn't have the card!" }
-        assert(board[action.positionIdx] == EMPTY) { "Target square is not empty!" }
-        assert(deck[drawnCard] > 0) { "Deck is not sufficient!" }
+        require(getHandOf(currentPlayer)[action.card] > 0) { "Player doesn't have the card!" }
+        require(board[action.positionIdx] == EMPTY) { "Target square is not empty!" }
+        if (drawnCard > 0) require(deck[drawnCard] > 0) { "Deck is not sufficient! $drawnCard" }
+        require(action.card > 0)
+        require(action.positionIdx in 0..<9)
+
+        val newDeck = if (drawnCard > 0) deck.adjustElement(drawnCard, -1) else deck
 
         val newHand = getHandOf(currentPlayer)
             .adjustElement(action.card, -1)
@@ -25,14 +35,13 @@ data class GlobalGameState(
             }
 
         return copy(
-            deck = deck.adjustElement(drawnCard, -1),
+            deck = newDeck,
             hands = hands.mapIndexed { idx, originalHand ->
                 if (idx == currentPlayer) newHand else originalHand
             },
             board = board.adjustElement(action.positionIdx, currentPlayer + 1),
             currentPlayer = getOpponentIndex()
         )
-
     }
 
     private fun getHandOf(playerIndex: Int): List<Int> = hands[playerIndex]

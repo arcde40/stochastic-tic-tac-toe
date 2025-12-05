@@ -53,18 +53,24 @@ object GameManager {
     }
 
     fun initializeGlobalState(drawSequence: List<Int>) =
-        drawSequence.fold(GlobalGameState(), ::drawCard)
+        drawSequence.fold(GlobalGameState()) { state, seq -> state.drawCard(seq) }
 
-    private fun drawCard(
-        state: GlobalGameState, playerIdx: Int
+
+    fun initializeGlobalState(drawSequence: List<Int>, globalGameState: GlobalGameState) =
+        drawSequence.fold(globalGameState) { state, seq -> state.drawCard(seq) }
+
+
+    fun GlobalGameState.drawCard(
+        playerIdx: Int
     ) =
-        GameManager.rollProbUniform(state.deck).let { drawnCard ->
-            assert(state.deck[drawnCard] > 0)
-            state.giveCardToPlayer(playerIdx, drawnCard)
+        rollProbUniform(deck).let { drawnCard ->
+            require(deck[drawnCard] > 0)
+            giveCardToPlayer(playerIdx, drawnCard)
         }
 
-    private fun GlobalGameState.giveCardToPlayer(playerIdx: Int, drawnCard: Int) =
-        copy(
+    fun GlobalGameState.giveCardToPlayer(playerIdx: Int, drawnCard: Int): GlobalGameState {
+        require(drawnCard > 0)
+        return copy(
             deck = deck.adjustElement(drawnCard, -1),
             hands = hands.mapIndexed { idx, originalHand ->
                 if (idx == playerIdx) {
@@ -72,6 +78,8 @@ object GameManager {
                 } else originalHand
             }
         )
+    }
+
 
     fun applyAction(state: GlobalGameState, action: Action) =
         with(state) {
